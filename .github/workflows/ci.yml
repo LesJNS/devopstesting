@@ -9,53 +9,55 @@ on:
       - main
 
 jobs:
+
   build:
     name: Build
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: codigo_devopsTesting
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
           node-version: '16'
 
       - name: Install dependencies
-        run: |
-          cd codigo_devopsTesting
-          npm install
+        run: npm install
 
       - name: Build the app
-        run: |
-          cd codigo_devopsTesting
-          npm run build
+        run: npm run build
 
   tests:
     name: Run Tests
     needs: build
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: codigo_devopsTesting   # 👈 Aquí está la MAGIA
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Use Node.js 18.x to run Test
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
           cache: 'npm'
-          
+          cache-dependency-path: codigo_devopsTesting/package-lock.json # 👈 IMPORTANTE
+
       - name: Install Dependencies
-        run: |
-          cd codigo_devopsTesting
-          npm ci
-        
+        run: npm ci
+
       - name: Run Tests
-        run: |
-          cd codigo_devopsTesting
-          npm run test
+        run: npm test --if-present
 
   deploy:
     name: Deploy
@@ -64,11 +66,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          cd codigo_devopsTesting
-          npx vercel --prod --yes --token $VERCEL_TOKEN
+        run: npx vercel --prod --yes --token $VERCEL_TOKEN
